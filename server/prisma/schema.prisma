@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  teacher
+  student
+}
+
+enum SubmissionStatus {
+  queued
+  running
+  accepted
+  wrong_answer
+  time_limit_exceeded
+  runtime_error
+  compilation_error
+  internal_error
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         Role
+  collegeId    String?  @map("college_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  contestsCreated Contest[]         @relation("ContestCreator")
+  participations  Participation[]
+  submissions     Submission[]
+  questionTimings QuestionTiming[]
+
+  @@map("users")
+}
+
+model Contest {
+  id               String   @id @default(uuid())
+  title            String
+  description      String?
+  startAt          DateTime @map("start_at")
+  endAt            DateTime @map("end_at")
+  durationMinutes  Int      @map("duration_minutes")
+  isPublished      Boolean  @default(false) @map("is_published")
+  allowedLanguages Json     @map("allowed_languages")
+  createdById      String   @map("created_by_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  createdBy       User              @relation("ContestCreator", fields: [createdById], references: [id])
+  contestProblems ContestProblem[]
+  participations  Participation[]
+  submissions     Submission[]
+  questionTimings QuestionTiming[]
+
+  @@map("contests")
+}
+
+/// Cached Codeforces problem bank — test cases stored locally after first import.
+model ProblemBank {
+  id           String   @id @default(uuid())
+  cfContestId  Int?     @map("cf_contest_id")
+  cfIndex      String   @map("cf_index")
+  externalKey  String   @unique @map("external_key")
+  title        String
+  statement    String   @default("")
+  rating       Int?
+  tags         Json
+  timeLimitMs  Int      @default(2000) @map("time_limit_ms")
+  memoryLimitKb Int     @default(256000) @map("memory_limit_kb")
+  points       Int      @default(100)
+  importedAt   DateTime @default(now()) @map("imported_at")
+
+  testCases       TestCase[]
+  contestProblems ContestProblem[]
+
+  @@map("problem_bank")
+}
+
+model TestCase {
+  id             String  @id @default(uuid())
+  problemBankId  String  @map("problem_bank_id")
+  input          String
+  expectedOutput String  @map("expected_output")
+  isHidden       Boolean @default(false) @map("is_hidden")
+  orderIndex     Int     @map("order_index")
+
+  problemBank ProblemBank @relation(fields: [problemBankId], references: [id], onDelete: Cascade)
+
+  @@map("test_cases")
+}
+
+model ContestProblem {
+  id            String @id @default(uuid())
+  contestId     String @map("contest_id")
+  problemBankId String @map("problem_bank_id")
+  orderIndex    Int    @map("order_index")
+  points        Int
+
+  contest     Contest     @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  problemBank ProblemBank @relation(fields: [problemBankId], references: [id])
+
+  @@unique([contestId, problemBankId])
+  @@map("contest_problems")
+}
+
+model Participation {
+  id              String   @id @default(uuid())
+  contestId       String   @map("contest_id")
+  studentId       String   @map("student_id")
+  startedAt       DateTime @default(now()) @map("started_at")
+  score           Int      @default(0)
+  penaltyMinutes  Int      @default(0) @map("penalty_minutes")
+  solvedCount     Int      @default(0) @map("solved_count")
+
+  contest Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  student User    @relation(fields: [studentId], references: [id])
+
+  @@unique([contestId, studentId])
+  @@map("participations")
+}
+
+model Submission {
+  id           String           @id @default(uuid())
+  contestId    String           @map("contest_id")
+  problemBankId String          @map("problem_bank_id")
+  studentId    String           @map("student_id")
+  code         String
+  language     String
+  status       SubmissionStatus @default(queued)
+  score        Int              @default(0)
+  passedTests  Int              @default(0) @map("passed_tests")
+  totalTests   Int              @default(0) @map("total_tests")
+  testResults  Json?            @map("test_results")
+  createdAt    DateTime         @default(now()) @map("created_at")
+  judgedAt     DateTime?        @map("judged_at")
+
+  contest Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  student User    @relation(fields: [studentId], references: [id])
+
+  @@map("submissions")
+}
+
+/// Heart of reporting: opened_at → solved_at = per-question solve time.
+model QuestionTiming {
+  id            String    @id @default(uuid())
+  contestId     String    @map("contest_id")
+  problemBankId String    @map("problem_bank_id")
+  studentId     String    @map("student_id")
+  openedAt      DateTime  @map("opened_at")
+  solvedAt      DateTime? @map("solved_at")
+
+  contest Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  student User    @relation(fields: [studentId], references: [id])
+
+  @@unique([contestId, problemBankId, studentId])
+  @@map("question_timings")
+}

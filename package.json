@@ -1,0 +1,24 @@
+{
+  "name": "contest-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:server": "npm run dev --prefix server",
+    "dev:worker": "npm run dev:worker --prefix server",
+    "build": "vite build",
+    "build:server": "npm run build --prefix server",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "contest-app": "file:",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
+    "vite": "^8.0.12"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "contest-server",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --env-file=.env src/index.js",
+    "dev:worker": "node --watch --env-file=.env src/workers/submissionWorker.js",
+    "start": "node --env-file=.env src/index.js",
+    "start:worker": "node --env-file=.env src/workers/submissionWorker.js",
+    "build": "echo No build step — server runs as JavaScript",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "node --env-file=.env prisma/seed.js"
+  },
+  "prisma": {
+    "seed": "node --env-file=.env prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.4.1",
+    "bcryptjs": "^2.4.3",
+    "bullmq": "^5.41.2",
+    "contest-app": "file:..",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "passport-local": "^1.0.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "prisma": "^6.4.1"
+  }
+}

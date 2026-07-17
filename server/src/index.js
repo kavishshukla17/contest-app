@@ -16,7 +16,17 @@ import { runAgainstTests, starterCode } from './judge.js'
 const app = express()
 const port = Number(process.env.PORT ?? 4000)
 
-app.use(cors())
+const corsOrigin = process.env.CORS_ORIGIN
+app.use(
+  cors(
+    corsOrigin
+      ? {
+          origin: corsOrigin.split(',').map((s) => s.trim()),
+          credentials: true,
+        }
+      : undefined,
+  ),
+)
 app.use(express.json({ limit: '1mb' }))
 app.use(passport.initialize())
 

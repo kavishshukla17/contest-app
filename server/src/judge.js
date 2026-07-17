@@ -125,7 +125,7 @@ async function runLocalPython(code, stdin, timeoutMs) {
   await writeFile(file, code, 'utf8')
   try {
     return await new Promise((resolve) => {
-      const proc = spawn('python', [file], { timeout: timeoutMs })
+      const proc = spawn(process.env.PYTHON_BIN || 'python3', [file], { timeout: timeoutMs })
       let stdout = ''
       let stderr = ''
       proc.stdin.write(stdin)
@@ -137,7 +137,25 @@ async function runLocalPython(code, stdin, timeoutMs) {
         stderr += chunk.toString()
       })
       proc.on('close', (exitCode) => resolve({ stdout, stderr, exitCode: exitCode ?? 1 }))
-      proc.on('error', (err) => resolve({ stdout: '', stderr: err.message, exitCode: 1 }))
+      proc.on('error', (err) => {
+        if (err.code === 'ENOENT' && (process.env.PYTHON_BIN || 'python3') === 'python3') {
+          const fallback = spawn('python', [file], { timeout: timeoutMs })
+          let out = ''
+          let errOut = ''
+          fallback.stdin.write(stdin)
+          fallback.stdin.end()
+          fallback.stdout.on('data', (chunk) => {
+            out += chunk.toString()
+          })
+          fallback.stderr.on('data', (chunk) => {
+            errOut += chunk.toString()
+          })
+          fallback.on('close', (exitCode) => resolve({ stdout: out, stderr: errOut, exitCode: exitCode ?? 1 }))
+          fallback.on('error', (e2) => resolve({ stdout: '', stderr: e2.message, exitCode: 1 }))
+          return
+        }
+        resolve({ stdout: '', stderr: err.message, exitCode: 1 })
+      })
     })
   } finally {
     await unlink(file).catch(() => {})

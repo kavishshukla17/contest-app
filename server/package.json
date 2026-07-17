@@ -6,21 +6,25 @@
   "scripts": {
     "dev": "node --watch --env-file=.env src/index.js",
     "dev:worker": "node --watch --env-file=.env src/workers/submissionWorker.js",
-    "start": "node --env-file=.env src/index.js",
-    "start:worker": "node --env-file=.env src/workers/submissionWorker.js",
-    "build": "echo No build step — server runs as JavaScript",
+    "start": "node src/index.js",
+    "start:worker": "node src/workers/submissionWorker.js",
+    "build": "prisma generate",
+    "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:seed": "node --env-file=.env prisma/seed.js"
+    "db:seed": "node prisma/seed.js",
+    "release": "prisma db push && node prisma/seed.js"
   },
   "prisma": {
-    "seed": "node --env-file=.env prisma/seed.js"
+    "seed": "node prisma/seed.js"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "dependencies": {
     "@prisma/client": "^6.4.1",
     "bcryptjs": "^2.4.3",
     "bullmq": "^5.41.2",
-    "contest-app": "file:..",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",

@@ -174,8 +174,11 @@ function LoginScreen({ onLogin }) {
 
   return (
     <main className="auth-shell">
-      <section className="auth-panel">
-        <div className="auth-brand">Arena</div>
+      <section className="auth-panel glass">
+        <div className="auth-brand-block">
+          <div className="auth-brand">Arena</div>
+          <div className="brand-tag">Coding Platform</div>
+        </div>
         <p className="auth-copy">College coding contests. Clean problems. Fair timing.</p>
         <form className="auth-form" onSubmit={handleSubmit}>
           <label>
@@ -757,14 +760,21 @@ export default function App() {
 
   return (
     <main className="app-shell">
-      <header className="topbar">
-        <div className="brand-lockup">
+      <header className="topbar glass">
+        <div className="topbar-side" aria-hidden="true" />
+        <div className="brand-center">
           <div className="brand">Arena</div>
-          <div className="user-meta">{session.user.name} · {session.user.role}</div>
+          <div className="brand-tag">Coding Platform</div>
         </div>
-        <button type="button" className="ghost" onClick={() => setSession(null)}>
-          Sign out
-        </button>
+        <div className="topbar-side topbar-user">
+          <span className="user-chip">
+            {session.user.name}
+            <span className="user-role">{session.user.role}</span>
+          </span>
+          <button type="button" className="ghost" onClick={() => setSession(null)}>
+            Sign out
+          </button>
+        </div>
       </header>
       {session.user.role === 'teacher' ? (
         <TeacherView session={session} onUnauthorized={() => setSession(null)} />
